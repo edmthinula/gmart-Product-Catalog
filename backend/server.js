@@ -5,12 +5,13 @@ const app = express()
 
 const authRoutes = require('./src/routes/authRoutes')
 const categoryRoutes = require('./src/routes/categoryRoutes')
-
+const productsRoutes = require('./src/routes/productsRoutes')
 // Middleware
 app.use(cors())
 app.use(express.json()) // Allows Express to read JSON data from the frontend
 app.use('/api/auth', authRoutes)
 app.use('/api/categories', categoryRoutes)
+app.use('/api/products',productsRoutes)
 
 // Simple test route
 app.get('/api/test', (req, res) => {

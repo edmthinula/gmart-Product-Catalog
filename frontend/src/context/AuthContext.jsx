@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../api/axios';
 
 const AuthContext = createContext(null);
 
@@ -16,6 +17,45 @@ export const AuthProvider = ({ children }) => {
     }
     return null;
   });
+  const [loading, setLoading] = useState(() => !!localStorage.getItem('token'));
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const verifyToken = async () => {
+      const storedToken = localStorage.getItem('token');
+      if (!storedToken) {
+        if (isMounted) setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await api.get('/auth/me');
+        if (isMounted && response.data?.user) {
+          setUser(response.data.user);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+        }
+      } catch (error) {
+        console.warn('Token validation failed, clearing session:', error.response?.data?.message || error.message);
+        if (isMounted) {
+          setToken(null);
+          setUser(null);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    verifyToken();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const login = (newToken, newUser) => {
     setToken(newToken);
@@ -43,7 +83,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, loading, login, logout, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );

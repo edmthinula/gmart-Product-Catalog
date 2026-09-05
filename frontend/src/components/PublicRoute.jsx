@@ -2,7 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 
-const ProtectedRoute = ({ children }) => {
+const PublicRoute = ({ children }) => {
   const { token, loading } = useAuth();
 
   if (loading) {
@@ -21,11 +21,12 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
+  // If already authenticated with a valid token, redirect to dashboard
+  if (token) {
+    return <Navigate to="/" replace />;
   }
 
   return children ? children : <Outlet />;
 };
 
-export default ProtectedRoute;
+export default PublicRoute;

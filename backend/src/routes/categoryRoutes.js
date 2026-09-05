@@ -7,10 +7,16 @@ const {
   deleteCategory
 } = require('../controllers/categoryController')
 const { protect } = require('../middleware/authMiddleware')
+const {
+  validateIdParam,
+  validateCreateCategory,
+  validateUpdateCategory
+} = require('../middleware/validateMiddleware')
 
+// Category Routes with Auth & Validation
 router.get('/', protect, getCategories)
-router.post('/', protect, createCategory)
-router.put('/:id', protect, updateCategory)
-router.delete('/:id', protect, deleteCategory)
+router.post('/', protect, validateCreateCategory, createCategory)
+router.put('/:id', protect, validateIdParam, validateUpdateCategory, updateCategory)
+router.delete('/:id', protect, validateIdParam, deleteCategory)
 
 module.exports = router

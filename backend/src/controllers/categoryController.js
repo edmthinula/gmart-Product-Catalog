@@ -2,9 +2,10 @@ const db = require('../config/db')
 
 exports.getCategories = async (req, res) => {
   try {
-    const categories = await db('categories').select('*')
+    const categories = await db('categories').select('*').orderBy('id', 'asc')
     res.json(categories)
   } catch (error) {
+    console.error('Error fetching categories:', error)
     res.status(500).json({ message: 'Server error fetching categories' })
   }
 }
@@ -12,14 +13,12 @@ exports.getCategories = async (req, res) => {
 exports.createCategory = async (req, res) => {
   const { name } = req.body
 
-  if (!name)
-    return res.status(400).json({ message: 'Category name is required' })
-
   try {
     const [id] = await db('categories').insert({ name })
     const newCategory = await db('categories').where({ id }).first()
     res.status(201).json(newCategory)
   } catch (error) {
+    console.error('Error creating category:', error)
     res.status(500).json({ message: 'Server error creating category' })
   }
 }
@@ -28,15 +27,16 @@ exports.updateCategory = async (req, res) => {
   const { id } = req.params
   const { name } = req.body
 
-  if (!name)
-    return res.status(400).json({ message: 'Category name is required' })
-
   try {
     const updated = await db('categories').where({ id }).update({ name })
-    if (!updated) return res.status(404).json({ message: 'Category not found' })
+    if (!updated) {
+      return res.status(404).json({ message: 'Category not found' })
+    }
 
-    res.json({ message: 'Category updated successfully' })
+    const updatedCategory = await db('categories').where({ id }).first()
+    res.json({ message: 'Category updated successfully', data: updatedCategory })
   } catch (error) {
+    console.error('Error updating category:', error)
     res.status(500).json({ message: 'Server error updating category' })
   }
 }
@@ -55,11 +55,10 @@ exports.deleteCategory = async (req, res) => {
   } catch (error) {
     if (error.code === 'ER_ROW_IS_REFERENCED_2') {
       return res.status(400).json({
-        message:
-          'Cannot delete this category because it still contains products.'
+        message: 'Cannot delete this category because it still contains products.'
       })
     }
-    console.error(error)
+    console.error('Error deleting category:', error)
     res.status(500).json({ message: 'Server error deleting category' })
   }
 }
